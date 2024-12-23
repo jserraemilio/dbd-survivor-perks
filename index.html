@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vite + React + TS</title>
+    <style>
+      /* DBD SCRAPPING HTML CLASSNAMES */
+      .FlavorText {
+        font-style: italic;
+        color: #e7cda2;
+      }
+      .tunable.level-1 {
+        color: #f2bd5b;
+      }
+      .tunable.level-2 {
+        color: #18a01d;
+      }
+      .tunable.level-3 {
+        color: #b637ec;
+      }
+      .tunable {
+        font-weight: 600;
+      }
+      .Highlight1 {
+        color: #f2bd5b;
+        font-weight: 600;
+      }
+      /* END DBD SCRAPPING HTML CLASSNAMES */
+
+      html {
+        font-family: "CircularStd", system-ui, sans-serif;
+        background: #121b28;
+        color: white;
+      }
+
+      .perkDescription ul {
+        list-style-position: inside;
+        list-style-type: disc;
+      }
+
+      .perkDescription li {
+        text-indent: 1rem;
+      }
+
+      .perkDescription p {
+        margin-bottom: 1rem;
+      }
+
+      search input::-webkit-search-cancel-button {
+      display: none;
+      }
+
+      @font-face {
+        font-family: "CircularStd";
+        src: url("./public/fonts/CircularStd-Medium.woff2") format("woff2");
+        font-weight: 500;
+        font-style: normal;
+        font-display: swap;
+      }
+
+      @font-face {
+        font-family: "CircularStd";
+        src: url("./public/fonts/CircularStd-Book.woff2") format("woff2");
+        font-weight: 400;
+        font-style: normal;
+        font-display: swap;
+      }
+
+      @font-face {
+        font-family: "CircularStd";
+        src: url("./public/fonts/CircularStd-Light.woff2") format("woff2");
+        font-weight: 300;
+        font-style: normal;
+        font-display: swap;
+      }
+
+      @font-face {
+        font-family: "CircularStd";
+        src: url("./public/fonts/CircularStd-Bold.woff2") format("woff2");
+        font-weight: 700;
+        font-style: normal;
+        font-display: swap;
+      }
+
+      @font-face {
+        font-family: "CircularStd";
+        src: url("./public/fonts/CircularStd-Black.woff2") format("woff2");
+        font-weight: 900;
+        font-style: normal;
+        font-display: swap;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
