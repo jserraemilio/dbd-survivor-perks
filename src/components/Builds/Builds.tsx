@@ -134,16 +134,11 @@ export default function Builds() {
                               "Clipboard API is not available in insecure contexts"
                             );
                           }
-
-                          if (build.perks.includes(null)) {
-                            toast.error(
-                              "Build must have 4 perks to copy to clipboard"
-                            );
-                            return;
-                          }
-
+                          const perksNames = build.perks.map((perk) => {
+                            return perk;
+                          });
                           navigator.clipboard.writeText(
-                            `${build.name}###${JSON.stringify(build)}`
+                            `${build.name}###${JSON.stringify(perksNames)}`
                           );
                           toast.success("Build copied to clipboard");
                         }}
