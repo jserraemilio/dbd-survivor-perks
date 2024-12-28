@@ -1,10 +1,13 @@
 import { useEffect, useState } from "react";
 import perksData from "../Perks/perks.json";
 import Perk from "../Perks/Perk";
-import { generateRandomString } from "../../utils/randomStrByBaseStr";
-import { Build, BuildPerk } from "../../types/build";
-
-const LOCAL_ITEM_KEY = "dbdsurvivorperksbuilds" as const;
+import { BuildPerk } from "../../types/build";
+import { LOCAL_ITEM_KEY } from "../../types/localItem";
+import { ClipboardIcon, EditIcon } from "../Icons";
+import toast, { Toaster } from "react-hot-toast";
+import { Link } from "react-router";
+import DeleteBuildBtn from "./DeleteBuildBtn";
+import ImportBuildBtn from "./ImportBuildBtn";
 
 export default function Builds() {
   const [query, setQuery] = useState("");
@@ -44,7 +47,22 @@ export default function Builds() {
 
   return (
     <div className="flex flex-col justify-center items-center mt-20">
+      <div>
+        <Toaster containerClassName="mt-[64px]" />
+      </div>
       <h1 className="text-5xl font-bold mb-20">Builds</h1>
+      <div className="mb-6 flex gap-4">
+        <DeleteBuildBtn
+          setBuilds={setBuilds}
+          builds={builds}
+          build={null}
+          deleteVariant="all"
+          setBuild={null}
+          setBuildName={null}
+          setSelectedSlot={null}
+        />
+        <ImportBuildBtn setBuilds={setBuilds} />
+      </div>
       <search className="w-full h-14">
         <label
           className="bg-[#1e2734] rounded-lg block focus-within:ring-4 focus-within:ring-[#1289f8]"
@@ -92,20 +110,70 @@ export default function Builds() {
             <span className="font-semibold">All builds</span>
           )}
         </h3>
-        {builds?.map((build) => {
-          return (
-            <div key={build.name}>
-              <strong>{build.name}</strong>
-              <ul className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {build?.perks?.map((perk: BuildPerk) => {
-                  const perkInfo = getPerkInfoByName(perk);
-                  return <Perk key={perkInfo.name} perk={perkInfo} hideName />;
-                })}
-              </ul>
-            </div>
-          );
-        })}
-        {!builds || (builds.length === 0 && <p>No builds found</p>)}
+        <div className="flex flex-col gap-16">
+          {builds
+            ?.slice()
+            .reverse()
+            .map((build) => {
+              return (
+                <div key={build.id}>
+                  <div className="flex flex-col md:flex-row gap-4 items-center">
+                    <strong className="text-2xl">{build.name}</strong>
+                    <div className="flex gap-4">
+                      <Link
+                        to={`/builds/edit/${build.id}`}
+                        className="bg-[#1e2734] border border-[#ffffff1f] hover:bg-transparent rounded-lg px-4 py-2 w-fit"
+                      >
+                        <EditIcon />
+                      </Link>
+                      <button
+                        className="bg-[#1e2734] border border-[#ffffff1f] hover:bg-transparent rounded-lg px-4 py-2 w-fit"
+                        onClick={() => {
+                          if (!window.isSecureContext) {
+                            toast.error(
+                              "Clipboard API is not available in insecure contexts"
+                            );
+                          }
+
+                          if (build.perks.includes(null)) {
+                            toast.error(
+                              "Build must have 4 perks to copy to clipboard"
+                            );
+                            return;
+                          }
+
+                          navigator.clipboard.writeText(
+                            `${build.name}###${JSON.stringify(build)}`
+                          );
+                          toast.success("Build copied to clipboard");
+                        }}
+                      >
+                        <ClipboardIcon />
+                      </button>
+                      <DeleteBuildBtn
+                        setBuilds={setBuilds}
+                        build={build}
+                        builds={builds}
+                        deleteVariant="default"
+                        setBuild={null}
+                        setBuildName={null}
+                        setSelectedSlot={null}
+                      />
+                    </div>
+                  </div>
+                  <ul className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {build?.perks?.map((perk: BuildPerk) => {
+                      const perkInfo = getPerkInfoByName(perk);
+                      return (
+                        <Perk key={perkInfo.name} perk={perkInfo} hideName />
+                      );
+                    })}
+                  </ul>
+                </div>
+              );
+            })}
+          {!builds || (builds.length === 0 && <p>No builds found</p>)}
+        </div>
       </div>
     </div>
   );

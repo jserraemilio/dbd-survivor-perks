@@ -1,0 +1,1 @@
+export const LOCAL_ITEM_KEY = "dbdsurvivorperksbuilds" as const;

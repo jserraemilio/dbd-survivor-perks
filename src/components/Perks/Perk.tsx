@@ -35,7 +35,10 @@ export default function Perk({
       )}
       <div className="flex flex-col items-center gap-2 p-2">
         <img
-          src={`/public/images/survivorPerks/${perk.image}`}
+          draggable="false"
+          width={256}
+          height={256}
+          src={`/images/survivorPerks/${perk.image}`}
           alt={perk.name}
         />
         {!hideName && (

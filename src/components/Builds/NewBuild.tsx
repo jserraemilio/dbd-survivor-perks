@@ -4,29 +4,45 @@ import Perk from "../Perks/Perk";
 import { Perk as TypePerk } from "../../types/perk";
 import { generateRandomString } from "../../utils/randomStrByBaseStr";
 import toast, { Toaster } from "react-hot-toast";
+import { ClipboardIcon, SearchIcon, TrashIcon } from "../Icons";
+import { LOCAL_ITEM_KEY } from "../../types/localItem";
+import { useNavigate, useParams } from "react-router";
+import ImportBuildBtn from "./ImportBuildBtn";
+import DeleteBuildBtn from "./DeleteBuildBtn";
 
-const LOCAL_ITEM_KEY = "dbdsurvivorperksbuilds" as const;
-
-export default function NewBuild() {
+export default function NewBuild({
+  isEditMode = false,
+}: {
+  isEditMode?: boolean;
+}) {
+  const { id } = useParams();
+  const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const [perks, setPerks] = useState(perksData);
   const [selectedSlot, setSelectedSlot] = useState(0);
-  const [build, setBuild] = useState([null, null, null, null]);
+  const [build, setBuild] = useState<(string | null)[]>([
+    null,
+    null,
+    null,
+    null,
+  ]);
   const [buildName, setBuildName] = useState("");
 
-  const handleOnChange = (event: any) => {
-    const value = event.target.value.toLowerCase();
+  const handleOnChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const value = event.target.value;
     setQuery(value);
+  };
 
+  useEffect(() => {
     const results = perksData.filter(
       (perk) =>
-        perk.name.toLowerCase().includes(value) ||
-        perk.description.toLowerCase().includes(value) ||
-        perk.survivorName.toLowerCase().includes(value)
+        perk.name.toLowerCase().includes(query.toLowerCase()) ||
+        perk.description.toLowerCase().includes(query.toLowerCase()) ||
+        perk.survivorName.toLowerCase().includes(query.toLowerCase())
     );
 
     setPerks(results);
-  };
+  }, [query]);
 
   // Crea localItem si no existe, y settea el state de builds
   useEffect(() => {
@@ -35,27 +51,41 @@ export default function NewBuild() {
     if (!localItem) {
       localStorage.setItem(LOCAL_ITEM_KEY, JSON.stringify([]));
     }
+
+    const localBuilds = JSON.parse(localStorage.getItem(LOCAL_ITEM_KEY));
+
+    if (isEditMode) {
+      const buildToEdit = localBuilds.find((build: any) => build.id === id);
+      if (!buildToEdit) {
+        navigate("/builds");
+        toast.error("Build not found");
+        return;
+      }
+
+      setBuildName(buildToEdit.name);
+      setBuild(buildToEdit.perks);
+    }
   }, []);
 
   return (
-    <div className="flex flex-col justify-center items-center mt-20">
+    <div className={`flex flex-col justify-center items-center mt-20`}>
       <div>
-        <Toaster />
+        <Toaster containerClassName="mt-[64px]" />
       </div>
-      <h1 className="text-5xl font-bold mb-20">New build</h1>
-      <ul className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <h1 className="text-5xl font-bold mb-20">
+        {isEditMode ? "Edit" : "New"} build
+      </h1>
+      <ul className="grid grid-cols-2 md:grid-cols-4 gap-4 w-full md:h-[256px]">
         {build.map((perkName, index) => {
           return (
             <div
               key={index}
-              className={selectedSlot === index ? "bg-red-400" : ""}
+              className={`${
+                selectedSlot === index
+                  ? "bg-[#ffffff1f] rounded-lg shadow-2xl"
+                  : ""
+              } w-fit`}
               onClick={() => {
-                // const perk = build[index];
-                // if (perk) {
-                //   const newBuild = [...build];
-                //   newBuild[index] = null;
-                //   setBuild(newBuild);
-                // }
                 setSelectedSlot(index);
               }}
             >
@@ -68,8 +98,11 @@ export default function NewBuild() {
                 />
               ) : (
                 <img
+                  draggable="false"
+                  width={256}
+                  height={256}
                   key={index}
-                  src="/public/emptyPerkSlot.png"
+                  src="/emptyPerkSlot.png"
                   alt="New build perk slot"
                 />
               )}
@@ -77,53 +110,115 @@ export default function NewBuild() {
           );
         })}
       </ul>
-      <div className="mt-6 flex gap-4">
-        <label
-          className="bg-[#1e2734] rounded-lg block focus-within:ring-4 focus-within:ring-[#1289f8]"
-          htmlFor="perkSearch"
-        >
-          <div className="flex border border-[#ffffff1f] rounded-lg">
-            <input
-              className="text-lg w-full p-2 bg-transparent focus:outline-none"
-              onChange={(event) => setBuildName(event.target.value)}
-              type="search"
-              name="buildName"
-              placeholder="Build name"
-              autoComplete="off"
-            />
-          </div>
-        </label>
-        <button
-          className="bg-[#1e2734] border border-[#ffffff1f] hover:bg-transparent rounded-lg px-4 py-2"
-          onClick={() => {
-            if (build.includes(null)) {
-              toast.error("Build must have 4 perks");
-              return;
-            }
+      <div className="mt-6 flex flex-col md:flex-row gap-4 md:gap-16">
+        <div className="flex gap-4">
+          <label
+            className="bg-[#1e2734] rounded-lg block focus-within:ring-4 focus-within:ring-[#1289f8]"
+            htmlFor="perkSearch"
+          >
+            <div className="flex border border-[#ffffff1f] rounded-lg">
+              <input
+                className="text-lg md:w-[250px] p-2 bg-transparent focus:outline-none"
+                value={buildName}
+                onChange={(event) => setBuildName(event.target.value)}
+                type="search"
+                name="buildName"
+                placeholder="Build name"
+                autoComplete="off"
+              />
+            </div>
+          </label>
+          <button
+            className="bg-[#1e2734] border border-[#ffffff1f] hover:bg-transparent rounded-lg px-4 py-2"
+            onClick={() => {
+              if (build.includes(null)) {
+                toast.error("Build must have 4 perks");
+                return;
+              }
 
-            const previousBuilds = JSON.parse(
-              localStorage.getItem(LOCAL_ITEM_KEY)
-            );
+              const localItem = localStorage.getItem(LOCAL_ITEM_KEY);
+              const previousBuilds = localItem ? JSON.parse(localItem) : [];
 
-            const newBuildName = buildName ? buildName.trim() : "Unnamed build";
+              const newBuildName = buildName
+                ? buildName.trim()
+                : "Unnamed build";
 
-            const newBuild = [
-              ...previousBuilds,
-              {
-                id: generateRandomString(newBuildName, 32),
-                name: newBuildName,
-                perks: build,
-              },
-            ];
+              let newBuild = [];
+              if (isEditMode) {
+                newBuild = previousBuilds.map((prevBuild: any) => {
+                  if (prevBuild.id === id) {
+                    return {
+                      id: id,
+                      name: newBuildName,
+                      perks: build,
+                    };
+                  }
+                  return prevBuild;
+                });
+              } else {
+                newBuild = [
+                  ...previousBuilds,
+                  {
+                    id: generateRandomString(newBuildName, 32),
+                    name: newBuildName,
+                    perks: build,
+                  },
+                ];
+              }
 
-            localStorage.setItem(LOCAL_ITEM_KEY, JSON.stringify(newBuild));
-            toast.success("Build saved successfully");
-            setBuild([null, null, null, null]);
-            setSelectedSlot(0);
-          }}
-        >
-          Save new build
-        </button>
+              localStorage.setItem(LOCAL_ITEM_KEY, JSON.stringify(newBuild));
+              toast.success("Build saved successfully!");
+              if (isEditMode) {
+                navigate("/builds");
+                return;
+              }
+              setBuild([null, null, null, null]);
+              setSelectedSlot(0);
+              setQuery("");
+              setBuildName("");
+            }}
+          >
+            Save
+          </button>
+        </div>
+        <div className="flex gap-4">
+          <ImportBuildBtn />
+          <button
+            className="bg-[#1e2734] border border-[#ffffff1f] hover:bg-transparent rounded-lg px-4 py-2 w-fit"
+            onClick={() => {
+              if (!window.isSecureContext) {
+                toast.error(
+                  "Clipboard API is not available in insecure contexts"
+                );
+              }
+
+              if (build.includes(null)) {
+                toast.error("Build must have 4 perks to copy to clipboard");
+                return;
+              }
+
+              navigator.clipboard.writeText(
+                `${
+                  buildName && buildName.length > 0
+                    ? buildName
+                    : "Unnamed build"
+                }###${JSON.stringify(build)}`
+              );
+              toast.success("Build copied to clipboard");
+            }}
+          >
+            <ClipboardIcon />
+          </button>
+          <DeleteBuildBtn
+            deleteVariant={isEditMode ? "edit" : "new"}
+            setBuild={setBuild}
+            setBuildName={setBuildName}
+            build={build}
+            builds={null}
+            setBuilds={null}
+            setSelectedSlot={setSelectedSlot}
+          />
+        </div>
       </div>
       <search className="w-full h-14 mt-12">
         <label
@@ -132,22 +227,7 @@ export default function NewBuild() {
         >
           <div className="flex border border-[#ffffff1f] rounded-lg">
             <div className="flex items-center pl-4 pr-4">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="text-[#707987] icon icon-tabler icons-tabler-outline icon-tabler-search"
-              >
-                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                <path d="M10 10m-7 0a7 7 0 1 0 14 0a7 7 0 1 0 -14 0" />
-                <path d="M21 21l-6 -6" />
-              </svg>
+              <SearchIcon />
             </div>
             <input
               className="text-lg w-full h-14 p-2 bg-transparent focus:outline-none"
@@ -175,7 +255,11 @@ export default function NewBuild() {
         <ul className="grid grid-cols-2 md:grid-cols-5 lg:grid-cols-7 gap-4">
           {perks?.map((perk: TypePerk) => (
             <div
-              className={build.includes(perk.name) ? "bg-red-400" : ""}
+              className={
+                build.includes(perk.name)
+                  ? "bg-[#ffffff1f] rounded-lg shadow-2xl"
+                  : ""
+              }
               key={perk.name}
               onClick={() => {
                 const newBuild = [...build];
@@ -197,15 +281,25 @@ export default function NewBuild() {
                 if (selectedSlot < newBuild.length) {
                   newBuild[selectedSlot] = perk.name;
                   setBuild(newBuild);
-                  setSelectedSlot(
-                    selectedSlot !== 3 ? selectedSlot + 1 : selectedSlot
-                  );
                 }
-                // TODO:
-                // 1) Solo avanzar el slot si los demás slots están llenos
-                // 2) En caso de que algun slot anterior a este este vacio, seleccionar el slot vacio previo, en vez del slot siguiente
-                // 3) Limpiar query y listado
-                // 4) Evitar salto de imagen cuando se cambia de imagen un slot
+
+                const firstEmptyPreviousSlot = newBuild
+                  .slice(0, selectedSlot)
+                  .findIndex((perkName) => perkName === null);
+
+                // Si hay un slot vacio previo, seleccionamos ese slot
+                if (firstEmptyPreviousSlot !== -1) {
+                  setSelectedSlot(firstEmptyPreviousSlot);
+                } else {
+                  const firstEmptyNextSlot = newBuild
+                    .slice(selectedSlot + 1)
+                    .findIndex((perkName) => perkName === null);
+
+                  // Si hay un slot vacio siguiente, seleccionamos ese slot
+                  if (firstEmptyNextSlot !== -1) {
+                    setSelectedSlot(selectedSlot + 1 + firstEmptyNextSlot);
+                  }
+                }
               }}
             >
               <Perk perk={perk} />

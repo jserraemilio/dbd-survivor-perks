@@ -18,6 +18,7 @@ createRoot(document.getElementById("root")!).render(
 
           <Route path="/builds" element={<Builds />} />
           <Route path="/builds/new" element={<NewBuild />} />
+          <Route path="/builds/edit/:id" element={<NewBuild isEditMode />} />
           <Route path="/builds/random" element={<RandomBuild />} />
         </Routes>
       </Layout>
